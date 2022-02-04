@@ -1,0 +1,216 @@
+import speech_recognition as sr
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from datetime import datetime
+import webbrowser
+import time
+from playsound import playsound
+from gtts import gTTS
+import random
+import requests
+import json
+import os
+from random import choice
+import wikipedia
+import ctypes
+import subprocess
+import winshell
+from PyQt5 import QtWidgets
+import sys
+from PyQt5.QtWidgets import QApplication,QMainWindow
+
+
+r = sr.Recognizer()
+
+
+def record(ask = False):   
+    with sr.Microphone() as source:
+        if ask:
+            speak(ask)
+        audio = r.listen(source)
+            
+            
+    voice = ""
+    try:
+        voice = r.recognize_google(audio,language="tr-TR")     
+    except sr.UnknownValueError:
+        speak("anlayamadım")
+    except sr.RequestError:
+        speak("sistem çalışmıyor.")
+    return voice
+    
+def wishMe():       #günaydın efendim kısmı...
+    hour = int(datetime.now().hour)
+    
+    if hour>=0 and hour <12:
+        speak("günaydın efendim , nasıl yardımcı olabilirim.")
+        
+    elif hour>=12 and hour<18:
+        speak("iyi günler efendim , nasıl yardımcı olabilirim." )
+        
+    elif hour>=18 and hour<10:
+        speak("iyi akşamlar efendim, nasıl yardımcı olabilirim." )
+    
+    else:
+        speak("iyi geceler efendim , nasıl yardımcı olabilirim.")
+    
+def response(voice):
+    if 'nasılsın' in voice:
+        sozler = ["iyiyim efendim, siz nasılsınız",
+                  "bugün kendimi iyi hissediyorum efendim,siz nasılsınız",
+                  "Efendim,ben bir bilgisayarım ve malesef duygularım yok, siz nasılsınız",]
+        secim = choice(sozler)
+        speak(secim)
+        sor = record()
+        if "iyi" in sor or "normal" in sor:
+            speak("iyi olmanıza çok sevindim...")
+        elif "kötü" in sor or "iyi değilim" in sor or "iyi hissetmiyorum" in sor:
+            speak("size iyi gelebileceğini düşündüğüm şarkılar var,şarkı açmamı ister misiniz ? ")
+            sarki = record()
+            if "evet" in sarki or "olur" in sarki: 
+                music_dir = "C:\\Users\\goalg\\OneDrive\\Masaüstü\\MUSIC"
+                songs = os.listdir(music_dir)    
+                i = random.randint(0,34)
+                songs = os.startfile(os.path.join(music_dir, songs[i]))
+            if "hayır" in voice or "istemiyorum" in voice:
+                speak("peki o zaman...")
+        else:
+            speak("bazen nasıl olduğunu gerçekten anlayamıyorum.")      
+    if 'kimsin' in voice:
+        sozler = ["ben sidar polat tarafından insanlığa yardımcı olmak için tasarlandım.şu an gelişme aşamasındayım. en kısa sürede mükemmelliğe ulaşacağıma inanıyorum.",
+                  "ben alita tanıştığıma memnun oldum.",
+                  "ben bir bilgisayarım ve malesef duygularım yok.",]
+        secim = choice(sozler)
+        speak(secim)
+    if 'saat kaç' in voice:
+        speak(datetime.now().strftime("Saat %H:%M:%S geçiyor"))
+    if 'youtube' in voice:
+        print("youtube açılıyor...")
+        driver = webdriver.Chrome()
+        url = "https://www.youtube.com/"
+        driver.get(url)
+        driver.maximize_window()
+        kim = record("youtube'da ne aramak istiyorsun")
+        time.sleep(1)
+        search = driver.find_element_by_name("search_query")
+        search.send_keys(kim)
+        print (f"{kim} aranıyor...")
+        search.send_keys(Keys.ENTER)
+        hangi = record("hangi videoyu açmamı istersin")
+        time.sleep(1)
+        if '1' in hangi or 'bir' in hangi or 'birinci' in voice:
+            blok = driver.find_element_by_xpath("//*[@id='contents']/ytd-video-renderer[1]")
+            blok.click()
+        if '2' in hangi or 'iki' in hangi:
+            blok = driver.find_element_by_xpath("//*[@id='contents']/ytd-video-renderer[2]")
+            blok.click()
+        if '3' in hangi or 'üç' in hangi:
+            blok = driver.find_element_by_xpath("//*[@id='contents']/ytd-video-renderer[3]")
+            blok.click()
+    if 'wikipedia' in voice:
+        wikipedia.set_lang("tr")
+        kim = record("wikipedia da ne aratmamı istersiniz.")
+        time.sleep(1)
+        result = wikipedia.summary (kim)
+        print(result)
+        speak(result)
+    if 'google' in voice:
+        driver = webdriver.Chrome()
+        url = "https://www.google.com.tr/"
+        driver.get(url)
+        driver.maximize_window()
+        kim = record("google'da ne aramak istiyorsun")
+        time.sleep(1)
+        search = driver.find_element_by_name("q")
+        search.send_keys(kim)
+        search.send_keys(Keys.ENTER)      
+    if 'bip' in voice:
+        driver = webdriver.Chrome()
+        url = "https://web.bip.com/chat"
+        driver.get(url)
+        time.sleep(10)
+        search = driver.find_element_by_xpath("/html/body/md-content/ui-view/div/ui-view/chat/div/div[1]/chat-contact-list/md-content/div[3]/div/div/div[2]/div/md-list-item/div/button")
+        search.send_keys(Keys.ENTER)
+        while True:
+            search2 = driver.find_element_by_xpath("/html/body/md-content/ui-view/div/ui-view/chat/div/div[2]/div[2]/conversation/div/editor/div/div/div[2]/div")
+            for i in range(999999):
+                search2.send_keys(i + 100000)
+                search2.send_keys(Keys.ENTER)
+    if 'dolar ne kadar' in voice:
+        api_url = "https://api.exchangeratesapi.io/latest?base="
+        bozulan_doviz = "USD"
+        alinacak_doviz = "TRY"
+        result = requests.get(api_url + bozulan_doviz)
+        result = json.loads(result.text)
+        print("1 AMERİKAN DOLARI = {0} TÜRK LİRASI".format(result["rates"][alinacak_doviz]))
+        speak("1 AMERİKAN DOLARI = {0} TÜRK LİRASI".format(result["rates"][alinacak_doviz]))
+    if 'teşekkür ederim' in voice:
+        speak('rica ederim,görüşmek üzere.')
+        exit()       
+    if 'kilitle' in voice: 
+        speak("kilitleniyor...") 
+        ctypes.windll.user32.LockWorkStation() 
+    if 'bilgisayarı kapat' in voice: 
+        speak("Bir saniye bekleyiniz ! sisteminiz kapanma yolunda...") 
+        subprocess.call('shutdown /s')
+    elif 'yeniden başlat' in voice:
+        speak("bilgisayar yeniden başlatılıyor...") 
+        subprocess.call('shutdown /r')
+    elif 'çöp kutusu' in voice or 'çöp kutusunu temizle' in voice: 
+        winshell.recycle_bin().empty(confirm = False, show_progress = False, sound = True) 
+        speak("çöp kutusu temizlendi") 
+    elif "dinlemeyi bırak" in voice.lower() or "dinleme" in voice: 
+        speak("ne kadar süre devre dışı kalmamı istersin") 
+        a = int(record()) 
+        time.sleep(a) 
+        print(a) 
+    elif "nerede" in voice: 
+            voice = voice.replace("nerede", "") 
+            location = voice 
+            speak("arattığın yer") 
+            speak(location) 
+            webbrowser.open("https://www.google.nl/maps/place/" + location + "")
+    elif 'müzik' in voice or "şarkı" in voice: 
+        speak("şarkı açılıyor") 
+        music_dir = "C:\\Users\\goalg\\OneDrive\\Masaüstü\\MUSIC"
+        songs = os.listdir(music_dir)    
+        i = random.randint(0,34)
+        songs = os.startfile(os.path.join(music_dir, songs[i])) 
+    elif "alita" in voice:
+        wishMe()   
+    
+def speak(string):
+    tts = gTTS(string,lang="tr")
+    file = 'audio-' + '.mp3'
+    tts.save(file)
+    playsound(file)
+    os.remove(file)
+    
+# wishMe()
+
+def window():
+    app = QtWidgets.QApplication(sys.argv)
+    win = QMainWindow()
+    
+    win.setWindowTitle("Alita") #pencerenin adı
+    win.setGeometry(1620,990,300,90)
+    
+    def tikla(self):
+        voice = record().lower()
+        sonuc.setText(voice + " dediniz.")
+        response(voice)
+        print(voice)
+    
+    buton = QtWidgets.QPushButton(win)      #buton kısmı
+    buton.setText("OK")
+    buton.move(60,10)
+    buton.resize(80,40)
+    buton.clicked.connect(tikla)
+    
+    sonuc = QtWidgets.QLabel(win)
+    sonuc.setText("Dinliyorum...")
+    sonuc.move(60,55)
+    
+    win.show()
+    sys.exit(app.exec_())
+window()
